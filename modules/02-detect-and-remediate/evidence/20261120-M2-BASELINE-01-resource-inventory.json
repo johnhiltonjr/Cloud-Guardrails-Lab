@@ -1,0 +1,42 @@
+[
+  {
+    "control": "C-04",
+    "httpsOnly": "",
+    "location": "southcentralus",
+    "name": "kv-hp-grd-seed-01-8edeb9",
+    "publicAccess": "Enabled",
+    "type": "microsoft.keyvault/vaults"
+  },
+  {
+    "control": "C-02",
+    "httpsOnly": "true",
+    "location": "southcentralus",
+    "name": "sthpgrdprod018edeb9",
+    "publicAccess": "Enabled",
+    "type": "microsoft.storage/storageaccounts"
+  },
+  {
+    "control": "none",
+    "httpsOnly": "true",
+    "location": "southcentralus",
+    "name": "sthpgrdref018edeb9",
+    "publicAccess": "Disabled",
+    "type": "microsoft.storage/storageaccounts"
+  },
+  {
+    "control": "C-02,C-05",
+    "httpsOnly": "false",
+    "location": "southcentralus",
+    "name": "sthpgrdseed018edeb9",
+    "publicAccess": "Enabled",
+    "type": "microsoft.storage/storageaccounts"
+  },
+  {
+    "control": "C-03",
+    "httpsOnly": "true",
+    "location": "eastus",
+    "name": "sthpgrdseed028edeb9",
+    "publicAccess": "Disabled",
+    "type": "microsoft.storage/storageaccounts"
+  }
+]

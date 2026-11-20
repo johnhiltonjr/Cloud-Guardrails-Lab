@@ -39,6 +39,8 @@ jobs:
 
   plan-policy:
     needs: static-scan
+    # Skips cleanly until the plan identity's repository variables exist
+    if: vars.AZURE_PLAN_CLIENT_ID != ''
     runs-on: ubuntu-latest
     # TODO (ADR-001): if you chose a separate Reader-only plan identity, grant
     # id-token: write here and log in with it. If you chose static-only PRs,
@@ -52,15 +54,15 @@ jobs:
       - uses: azure/login@v2
         with:
           client-id: ${{ vars.AZURE_PLAN_CLIENT_ID }}
-          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           allow-no-subscriptions: true
       - name: Terraform plan
         working-directory: ${{ env.TF_DIR }}
         env:
           ARM_USE_OIDC: "true"
           ARM_CLIENT_ID: ${{ vars.AZURE_PLAN_CLIENT_ID }}
-          ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
-          ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
         run: |
           terraform init -input=false
           terraform plan -input=false -out=tfplan
@@ -74,7 +76,7 @@ jobs:
         run: conftest test "$TF_DIR/plan.json" --policy "$POLICY_DIR"
 
   deploy:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.AZURE_DEPLOY_CLIENT_ID != ''
     needs: plan-policy
     runs-on: ubuntu-latest
     environment: lab            # required reviewer + main-only (Module 3)
@@ -87,15 +89,15 @@ jobs:
       - uses: azure/login@v2
         with:
           client-id: ${{ vars.AZURE_DEPLOY_CLIENT_ID }}
-          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           allow-no-subscriptions: true
       - name: Terraform apply
         working-directory: ${{ env.TF_DIR }}
         env:
           ARM_USE_OIDC: "true"
           ARM_CLIENT_ID: ${{ vars.AZURE_DEPLOY_CLIENT_ID }}
-          ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
-          ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
         run: |
           terraform init -input=false
           terraform apply -input=false -auto-approve

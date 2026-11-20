@@ -1,0 +1,7 @@
+Name                      Location        PublicAccess    HttpsOnly    Control
+------------------------  --------------  --------------  -----------  ---------
+kv-hp-grd-seed-01-8edeb9  southcentralus  Enabled                      C-04
+sthpgrdprod018edeb9       southcentralus  Enabled         true         C-02
+sthpgrdref018edeb9        southcentralus  Disabled        true         none
+sthpgrdseed018edeb9       southcentralus  Enabled         false        C-02,C-05
+sthpgrdseed028edeb9       eastus          Disabled        true         C-03
