@@ -1,0 +1,101 @@
+# Guardrails CI gate (skeleton — complete in Module 1, harden in Module 3)
+#
+# Stage 1  static-scan : every PR, no cloud credentials
+# Stage 2  plan-policy : terraform plan + Conftest (identity per ADR-001)
+# Stage 3  deploy      : main only, protected "lab" environment, OIDC deployer
+#
+# TODO (Module 3, TM-02): pin every action below to a full commit SHA.
+
+name: guardrails
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+env:
+  TF_DIR: modules/01-guardrails-as-code/terraform
+  POLICY_DIR: modules/01-guardrails-as-code/policy
+  CONFTEST_VERSION: "0.56.0"   # TODO: confirm the current release
+
+jobs:
+  static-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+      - name: Terraform format
+        run: terraform fmt -check -recursive
+        working-directory: ${{ env.TF_DIR }}
+      - name: Checkov (HCL, no credentials)
+        run: |
+          pip install --quiet checkov
+          checkov -d "$TF_DIR" --framework terraform --compact
+      # TODO (Module 3): add a secrets scan here (for example gitleaks)
+
+  plan-policy:
+    needs: static-scan
+    runs-on: ubuntu-latest
+    # TODO (ADR-001): if you chose a separate Reader-only plan identity, grant
+    # id-token: write here and log in with it. If you chose static-only PRs,
+    # restrict this job to push events and the "lab" environment instead.
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_PLAN_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          allow-no-subscriptions: true
+      - name: Terraform plan
+        working-directory: ${{ env.TF_DIR }}
+        env:
+          ARM_USE_OIDC: "true"
+          ARM_CLIENT_ID: ${{ vars.AZURE_PLAN_CLIENT_ID }}
+          ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+        run: |
+          terraform init -input=false
+          terraform plan -input=false -out=tfplan
+          terraform show -json tfplan > plan.json
+      - name: Install Conftest
+        run: |
+          curl -sSL -o conftest.tgz \
+            "https://github.com/open-policy-agent/conftest/releases/download/v${CONFTEST_VERSION}/conftest_${CONFTEST_VERSION}_Linux_x86_64.tar.gz"
+          tar xzf conftest.tgz conftest && sudo mv conftest /usr/local/bin/
+      - name: Policy check (OPA / Conftest)
+        run: conftest test "$TF_DIR/plan.json" --policy "$POLICY_DIR"
+
+  deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: plan-policy
+    runs-on: ubuntu-latest
+    environment: lab            # required reviewer + main-only (Module 3)
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_DEPLOY_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          allow-no-subscriptions: true
+      - name: Terraform apply
+        working-directory: ${{ env.TF_DIR }}
+        env:
+          ARM_USE_OIDC: "true"
+          ARM_CLIENT_ID: ${{ vars.AZURE_DEPLOY_CLIENT_ID }}
+          ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+        run: |
+          terraform init -input=false
+          terraform apply -input=false -auto-approve

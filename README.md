@@ -84,10 +84,10 @@ Each is one page or one diagram. Templates are in [`docs/templates/`](docs/templ
 
 - **Evidence or it didn't happen.** Every claim links to code, a CI run, or a measured result.
 - **One page per artifact.** If it doesn't fit, the decision is too big.
+- **One naming scheme.** Every resource, identity, branch and file follows the [naming convention](docs/standards/naming-convention.md).
 - **Fictional and clean.** No real company, tenant, subscription or account identifiers.
 - **Torn down after testing.** Lab resources are destroyed after each module; costs stay near zero.
 
 ## Out of scope for this lab
 
 Conditional Access as code, Microsoft Purview, Defender for Cloud paid plans, and Microsoft Sentinel.
-# Cloud-Guardrails-Lab
