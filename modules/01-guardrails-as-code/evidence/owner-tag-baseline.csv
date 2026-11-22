@@ -1,0 +1,3 @@
+Subscription,ResourceGroup,OwnerTag
+sub-hp-lab-prod-01,rg-hp-grd-prod-scus-01,Present
+sub-hp-lab-nonprod-01,rg-hp-grd-seed-scus-01,Missing
