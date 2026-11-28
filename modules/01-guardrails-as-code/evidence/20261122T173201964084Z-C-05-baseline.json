@@ -1,0 +1,34 @@
+{
+  "control": "C-05",
+  "captureStartedUtc": "2026-11-22T17:32:01.964084+00:00",
+  "subscriptionsQueried": [
+    "sub-hp-lab-prod-01",
+    "sub-hp-lab-nonprod-01"
+  ],
+  "rows": [
+    {
+      "subscription": "sub-hp-lab-prod-01",
+      "name": "sthpgrdprod018edeb9",
+      "resourceGroup": "rg-hp-grd-prod-scus-01",
+      "enableHttpsTrafficOnly": true
+    },
+    {
+      "subscription": "sub-hp-lab-prod-01",
+      "name": "sthpgrdref018edeb9",
+      "resourceGroup": "rg-hp-grd-prod-scus-01",
+      "enableHttpsTrafficOnly": true
+    },
+    {
+      "subscription": "sub-hp-lab-nonprod-01",
+      "name": "sthpgrdseed028edeb9",
+      "resourceGroup": "rg-hp-grd-seed-scus-01",
+      "enableHttpsTrafficOnly": true
+    },
+    {
+      "subscription": "sub-hp-lab-nonprod-01",
+      "name": "sthpgrdseed018edeb9",
+      "resourceGroup": "rg-hp-grd-seed-scus-01",
+      "enableHttpsTrafficOnly": false
+    }
+  ]
+}

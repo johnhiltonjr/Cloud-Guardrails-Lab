@@ -1,6 +1,73 @@
 # Harbor & Pine Insurance — Azure Target State
 
-**Module 1 · Planned configuration**
+## Week 1 governance target
+
+The Week 1 deliverable is a deployed Audit baseline with compliance
+evidence. Audit does not remediate the seeded resources. The resource
+target and finding-closure table below describe subsequent remediation.
+
+```mermaid
+flowchart TB
+    subgraph github["GitHub Actions"]
+        pr["Pull request"]
+        checks["Credential-free checks and Rego tests"]
+        plan["Trusted main run: Terraform plan and Conftest"]
+        approval["Protected lab environment approval"]
+        apply["Apply the same checked saved plan"]
+
+        pr --> checks
+        checks --> merge["Reviewed merge and push to main"]
+merge --> plan
+        plan --> approval
+        approval --> apply
+    end
+
+    plan -->|"OIDC"| reader["hp-guardrails-plan"]
+    apply -->|"OIDC"| deployer["hp-guardrails-deploy"]
+
+    reader -->|"Read configuration"| mg
+    reader -->|"State access and locking"| state["Terraform state container"]
+    deployer -->|"State access"| state
+    deployer -->|"Manage policies"| baseline["hp-baseline assignment of hp-security-baseline"]
+
+    subgraph azure["Azure lab hierarchy — verify subscription placement"]
+        mg["mg-hp-guardrails-lab"]
+        prod["sub-hp-lab-prod-01"]
+        nonprod["sub-hp-lab-nonprod-01"]
+        platform["sub-hp-lab-platform-01"]
+
+        mg --> prod
+        mg --> nonprod
+        mg --> platform
+    end
+
+    baseline -->|"Assigned at"| mg
+    platform -->|"Hosts"| state
+```
+
+The diagram summarizes the intended flow. PR checks run without Azure
+credentials. Azure-connected planning runs after a trusted push to main;
+deployment uses the protected lab environment and a separate identity.
+
+The initiative contains one custom C-01 definition and four built-ins.
+Each control has an independent effect parameter. All five begin in Audit;
+C-02 progresses to Deny in Week 2 after validation and approval.
+
+The planning identity has Reader access to the lab management group,
+with separate backend permissions for state access and locking.
+The deployment identity has policy-management permissions at lab scope
+and separate backend access.
+
+### Future AWS integration
+
+QuoteFast's AWS account remains outside the Azure Policy assignment.
+AWS OIDC trust and AWS-native guardrails are planned for the AWS module;
+Azure Policy does not enforce controls in that account.
+
+## Subsequent resource remediation target
+
+
+**Week 1 Audit baseline and subsequent remediation target — deployment pending**
 
 The target covers the production and non-production subscriptions evaluated in the November 22 baseline. South Central US (`southcentralus`) is the only approved Azure region for this scope. Each resource group has an `Owner` tag. All four target storage accounts require HTTPS and disable public network access. The Key Vault also disables public network access.
 
